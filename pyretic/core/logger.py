@@ -1,7 +1,26 @@
 import datetime
 import os
 
+tracePyretic = None
+PYRETICLOGLEVEL = 100
+useTraceFile = True
+
 class simpleLogger(object):
+  @staticmethod
+  def geTracePyretic():
+    global tracePyretic
+
+    if useTraceFile:
+      baseName = "pyretic.log"
+
+    else:
+      baseName = None
+
+    if tracePyretic == None:
+      tracePyretic = simpleLogger(baseName=baseName, logLevel=PYRETICLOGLEVEL).write
+
+    return(tracePyretic)
+  
   def __init__(self, baseName=None, logLevel=0, timeStamped=True):
   
     logFile = None
