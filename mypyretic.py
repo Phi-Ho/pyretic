@@ -198,7 +198,7 @@ def getModuleName(op, args):
         sys.exit(1)
         
 def getMainModule(op, args):
-    module_name = getModuleName(args)
+    module_name = getModuleName(op, args)
 
     try:
         module = import_module(module_name)
