@@ -2,8 +2,9 @@ import datetime
 import os
 
 tracePyretic = None
-PYRETICLOGLEVEL = 100
+STATICLOGLEVEL = 50
 useTraceFile = True
+BASENAME = "pyretic.log"
 
 class simpleLogger(object):
   @staticmethod
@@ -11,13 +12,13 @@ class simpleLogger(object):
     global tracePyretic
 
     if useTraceFile:
-      baseName = "pyretic.log"
+      baseName = BASENAME
 
     else:
       baseName = None
 
     if tracePyretic == None:
-      tracePyretic = simpleLogger(baseName=baseName, logLevel=PYRETICLOGLEVEL).write
+      tracePyretic = simpleLogger(baseName=baseName, logLevel=STATICLOGLEVEL).write
 
     return(tracePyretic)
   
