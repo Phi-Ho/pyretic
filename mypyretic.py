@@ -187,7 +187,7 @@ def setPyreticEnv(pyreticpath, options):
   os.environ["PYRETICLOGDIR"]   = logDirPathName
   os.environ["PYRETICLOGLEVEL"] = str(options.logLevel)
 
-def getModuleName(args):
+def getModuleName(op, args):
     try:
         return(args[0])
         
