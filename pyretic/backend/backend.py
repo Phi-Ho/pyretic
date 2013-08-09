@@ -28,13 +28,18 @@
 ################################################################################
 
 import threading
-from pyretic.backend.comm import *
+from tools.comm import *
 from pyretic.core.runtime import ConcretePacket
+from tools.logger import simpleLogger
+
+# self.trace = simpleLogger.geTracePyretic()
 
 class BackendServer(asyncore.dispatcher):
   """Receives connections and establishes handlers for each backend.
   """
   def __init__(self, backend, address):
+    self.debug = True
+    self.trace("BackendServer backend=%s address=%s\n" % (backend, address) , timeStamped=True)
     asyncore.dispatcher.__init__(self)
     self.create_socket(socket.AF_INET, socket.SOCK_STREAM)
     self.set_reuse_addr()
@@ -44,7 +49,14 @@ class BackendServer(asyncore.dispatcher):
     self.backend = backend
     return
 
+  def trace(self, logLine, timeStamped=False):
+    if not self.debug:
+      return
+
+    simpleLogger.geTracePyretic()(logLine, timeStamped)
+
   def handle_accept(self):
+    self.trace("BackendServer.handle_accept\n", timeStamped=True)
     # Called when a backend connects to our socket
     backend_info = self.accept()
     self.backend.backend_channel = BackendChannel(self.backend,sock=backend_info[0])
@@ -57,6 +69,7 @@ class BackendServer(asyncore.dispatcher):
     return
 
   def handle_close(self):
+    self.trace("BackendServer.handle_close\n", timeStamped=True)
     self.close()
 
 
@@ -64,14 +77,23 @@ class BackendChannel(asynchat.async_chat):
   """Handles echoing messages from a single backend.
   """
   def __init__(self, backend, sock):
+    self.debug = True
+    self.trace("BackendChannel backend=%s sock=%s\n" % (backend, sock), timeStamped=True)
     self.backend = backend
     self.received_data = []
     asynchat.async_chat.__init__(self, sock)
     self.set_terminator(TERM_CHAR)
     return
 
+  def trace(self, logLine, timeStamped=False):
+    if not self.debug:
+      return
+
+    simpleLogger.geTracePyretic()(logLine, timeStamped)
+
   def collect_incoming_data(self, data):
     """Read an incoming message from the backend and put it into our outgoing queue."""
+    self.trace("BackendChannel.collect_incoming_data\n", timeStamped=True)
     with self.backend.channel_lock:
       self.received_data.append(data)
 
@@ -79,6 +101,8 @@ class BackendChannel(asynchat.async_chat):
     """The end of a command or message has been seen."""
     with self.backend.channel_lock:
       msg = deserialize(self.received_data)
+
+    self.trace("BackendChannel.found_terminator: msg=%s\n" % msg, timeStamped=True)
 
     # USE DESERIALIZED MSG
     if msg[0] == 'switch':
@@ -125,6 +149,8 @@ class Backend(object):
       asyncore.loop()
 
   def __init__(self, ip='127.0.0.1', port=BACKEND_PORT):
+    self.debug = True
+    self.trace("Backend ip=%s port=%s\n" % (ip, port), timeStamped=True)
     self.backend_channel = None
     self.runtime = None
     self.channel_lock = threading.Lock()
@@ -136,19 +162,30 @@ class Backend(object):
     self.al.daemon = True
     self.al.start()
 
+  def trace(self, logLine, timeStamped=False):
+    if not self.debug:
+      return
+
+    simpleLogger.geTracePyretic()(logLine, timeStamped)
+
   def send_packet(self,packet):
+    self.trace("Backend.send_packet: %s\n" % packet, timeStamped=True)
     self.send_to_OF_client(['packet',packet])
 
   def send_install(self,pred,action_list):
+    self.trace("Backend.send_install: pred=%s action_list=%s\n" % (pred,action_list), timeStamped=True)
     self.send_to_OF_client(['install',pred,action_list])
 
   def send_clear_all(self):
+    self.trace("Backend.send_clear_all\n", timeStamped=True)
     self.send_to_OF_client(['clear_all'])
 
   def inject_discovery_packet(self,dpid, port):
+    self.trace("Backend.inject_discovery_packet: dpid=%s port=%s\n" % (dpid, port), timeStamped=True)
     self.send_to_OF_client(['inject_discovery_packet',dpid,port])
 
   def send_to_OF_client(self,msg):
+    self.trace("Backend.send_to_OF_client: msg=%s\n" % msg, timeStamped=True)
     serialized_msg = serialize(msg)
     
     with self.channel_lock:
