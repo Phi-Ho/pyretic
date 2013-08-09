@@ -673,7 +673,7 @@ class POXClient(revent.EventMixin):
         # if self.show_traces:
         if self.trace != None:
             self.packetno += 1
-            self.trace("-------- POX/OF RECV %d ---------------" % self.packetno, timeStamped=True)
+            self.trace("\n-------- POX/OF RECV %d ---------------" % self.packetno, timeStamped=True)
             self.trace(event.connection)
             self.trace(event.ofp)
             self.trace("port\t%s" % event.port)
