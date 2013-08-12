@@ -29,6 +29,7 @@
 ################################################################################
 
 import threading
+import asyncore
 
 import pox.openflow.libopenflow_01 as of
 from pox.core import core
@@ -44,6 +45,7 @@ from tools.logger import simpleLogger
 import datetime
 
 OFCLIENTLOGLEVEL = 5
+useThreading = True
 
 def inport_value_hack(outport):
     if outport > 1:
@@ -67,7 +69,7 @@ class BackendChannel(asynchat.async_chat):
         return
 
     def handle_connect(self):
-        print "Connected to pyretic frontend."
+        self.trace("Connected to pyretic frontend.")
         
     def collect_incoming_data(self, data):
         """Read an incoming message from the client and put it into our outgoing queue."""
@@ -693,9 +695,13 @@ def launch(ip='127.0.0.1', port=BACKEND_PORT):
             
     POXClient(ip=ip, port=int(port))
     
-    al = asyncore_loop()
-    al.start()
+    if useThreading:
+      al = asyncore_loop()
+      al.start()
 
+    else:
+      asyncore.loop()
+      
 
 
     
