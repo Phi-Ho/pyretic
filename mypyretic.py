@@ -102,6 +102,9 @@ def buildOptions():
     op.add_option( '--ofclient-only', '-o', action="store_true", 
                      dest="ofclient_only", help = 'only start the OF client'  )
 
+    op.add_option( '--echoServer', '-e', action="store_true", 
+                     dest="useEchoServer", help = 'use EchoServer for testing'  )
+
     op.set_defaults(frontend_only=False,mode='reactive0')
     options, args = op.parse_args()
 
@@ -219,9 +222,18 @@ def startRuntime(op, options, args, kwargs_to_pass):
 
     sys.setrecursionlimit(1500) #INCREASE THIS IF "maximum recursion depth exceeded"
     
-    from pyretic.core.runtime import Runtime
     from pyretic.backend.backend import Backend
-    runtime = Runtime(Backend(ip=options.backendIP, port=options.backendPort),main,kwargs,options.mode,options.verbosity,False,False)
+    from pyretic.backend.BackendServer import BackendServer
+    
+    if options.useEchoServer:
+      backEnd = BackendServer(port=options.backendPort)
+      options.frontend_only = True
+      
+    else:
+      backEnd = Backend(port=options.backendPort)
+    
+    from pyretic.core.runtime import Runtime
+    runtime = Runtime(backEnd, main,kwargs, options.mode, options.verbosity, False, False)
 
 def startOFClient(poxpath, options):
 
